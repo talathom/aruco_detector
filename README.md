@@ -9,3 +9,7 @@ This generates marker ID 0 3x3 inches in size and saves it to the working direct
 
 ## Aruco_Detector.py
 To begin detecting AR Markers you must first launch openni.launch and then launch the Aruco_Detector.py script this can be done by executing rosrun aruco_detector Aruco_Detector.py which will then begin publishing messages on /aruco_detector/ArucoMessage
+
+Example (In Seperate Terminal Tabs):
+roslaunch openni_launch openni.launch
+rosrun aruco_detector Aruco_Detector.py
