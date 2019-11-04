@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Last Updated on October 27 2019
+Last Updated on October 15 2019
 
 @author: Thomas Talasco
 """
@@ -25,12 +25,9 @@ class Aruco_Detector:
         self.markers = list()
         self.image_sub = rospy.Subscriber("/camera/rgb/image_color", Image, self.image_callback)
         self.depth_sub = rospy.Subscriber("/camera/depth/image", Image, self.depth_callback)
-        # Topic for publishing AR messages
         self.pub = rospy.Publisher("/aruco_detector/ArucoMessage", ArucoMessage, queue_size=10)
-        #Length and Width of image
-        self.img_y = 0
-        self.img_x = 0 
-        #Center of the image coordinates
+        self.img_y = 0 #Length and Width of image
+        self.img_x = 0
         self.img_center_y = 0
         self.img_center_x = 0
         self.depth_image = [[0 for x in range(640)] for y in range(480)] # initialize zero array
@@ -55,14 +52,14 @@ class Aruco_Detector:
         self.img_y = img_shape[0] #Image length
         self.img_x = img_shape[1] #Image width
         
-        #Find Image midpoint
+        #Image midpoints
         self.img_center_y = self.img_y/2
         self.img_center_x = self.img_x/2
         
         # Detect markers using OpenCV library        
         corners, ids, rejectedImgPoints = aruco.detectMarkers(cv_image, self.ar_dict, parameters=self.param)
         for i in range(0, len(corners)):
-            # Build list of marker objects for each detected marker
+            # Build list of marker objects
             new_marker = AR_Marker(corners, int(ids[i]))
             self.markers.append(new_marker)
             
@@ -76,20 +73,20 @@ class Aruco_Detector:
             message.y = marker.y
             message.z = marker.z
             message.id = marker.id_num
+            message.X_corners = marker.corners_X
+            message.Y_corners = marker.corners_Y
             
             #Calculate angular coord by finding the angle between the vector which points to the center of the marker and the vector which represents the midpoint of the image
             vector_mult = self.img_center_x*marker.x + self.img_center_y*marker.y
             vector_magnitudes = self.getVectorMagnitude(self.img_center_x, self.img_center_y) * self.getVectorMagnitude(marker.x, marker.y)
             
-            # Find the angle between the vectors in degrees
             marker.angular = math.degrees(math.acos(vector_mult / vector_magnitudes))
-            # Invert the angle if on left side of image to give it direction
             if marker.x < self.img_center_x:
                 marker.angular = -marker.angular
             
             message.angular = marker.angular
             
-            # Publish the Message!
+            
             self.pub.publish(message)
         
         #Clear marker list for next callback
